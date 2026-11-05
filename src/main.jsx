@@ -90,17 +90,24 @@ function Icon({ children }) { return <span aria-hidden="true">{children}</span> 
 function App() {
   const [active, setActive] = useState('destaques')
   const [selected, setSelected] = useState(null)
+  const [cart, setCart] = useState([])
+  const [flow, setFlow] = useState(null)
+  const [order, setOrder] = useState(null)
   const chipsRef = useRef(null)
   const items = useMemo(() => menu.filter((item) => item.category === active), [active])
   const category = categories.find((item) => item.id === active)
   const go = (id) => { setActive(id); document.getElementById('menu')?.scrollIntoView({ behavior: 'smooth', block: 'start' }) }
   const scrollChips = (direction) => chipsRef.current?.scrollBy({ left: direction * 230, behavior: 'smooth' })
+  const addToCart = (item) => { setCart((current) => { const found = current.find((entry) => entry.name === item.name && entry.price === item.price); return found ? current.map((entry) => entry === found ? { ...entry, quantity: entry.quantity + 1 } : entry) : [...current, { ...item, quantity: 1 }] }); setSelected(null) }
+  const total = cart.reduce((sum, item) => sum + Number(item.price.replace(/[^0-9,]/g, '').replace(',', '.')) * item.quantity, 0)
+  const finalize = (event) => { event.preventDefault(); const data = new FormData(event.currentTarget); setOrder({ id: String(1042 + Math.floor(Math.random() * 70)), name: data.get('name'), mode: data.get('mode'), address: data.get('address'), payment: data.get('payment'), items: cart, total }); setCart([]); setFlow('success') }
 
   return <main>
     <header className="topbar">
       <img className="logo" src="/images/logo-cantinho.png" alt="Bar Cantinho do Céu" />
       <div className="brand"><strong>Cantinho do Céu</strong><span>Marapé · Santos</span></div>
       <div className="header-links">
+        <button className="cart-button" onClick={() => setFlow('cart')} aria-label="Ver carrinho">🛒<b>{cart.reduce((sum, item) => sum + item.quantity, 0)}</b></button>
         <a href={contact.instagram} target="_blank" rel="noreferrer" aria-label="Instagram"><Icon>◎</Icon></a>
         <a href={contact.whatsapp} target="_blank" rel="noreferrer" aria-label="WhatsApp"><Icon>◔</Icon></a>
       </div>
@@ -151,7 +158,11 @@ function App() {
       <a href={contact.maps} target="_blank" rel="noreferrer"><Icon>★</Icon><span>Avaliar</span></a>
     </nav>
 
-    {selected && <div className="modal-backdrop" role="presentation" onClick={() => setSelected(null)}><article className={`modal ${selected.kind === 'festival' ? 'festival-modal' : ''}`} role="dialog" aria-modal="true" aria-label={selected.name} onClick={(event) => event.stopPropagation()}>{selected.image && <img src={selected.image} alt="" />}<button className="close" onClick={() => setSelected(null)} aria-label="Fechar">×</button><p>{selected.kind === 'festival' ? 'TODA QUINTA' : 'NO CANTINHO'}</p><h2>{selected.name}</h2><strong>{selected.price}</strong><span className="divider" /><div>{selected.detail}</div>{selected.kind === 'festival' && <><section className="festival-includes"><h3>O que está incluso</h3><p><b>Bebidas:</b> {selected.drinks}</p><div className="festival-items">{selected.items.map((item) => <span key={item}>✓ {item}</span>)}</div></section></>}<a href={contact.whatsapp} target="_blank" rel="noreferrer">Tirar dúvida no WhatsApp <Icon>↗</Icon></a></article></div>}
+    {selected && <div className="modal-backdrop" role="presentation" onClick={() => setSelected(null)}><article className={`modal ${selected.kind === 'festival' ? 'festival-modal' : ''}`} role="dialog" aria-modal="true" aria-label={selected.name} onClick={(event) => event.stopPropagation()}>{selected.image && <img src={selected.image} alt="" />}<button className="close" onClick={() => setSelected(null)} aria-label="Fechar">×</button><p>{selected.kind === 'festival' ? 'TODA QUINTA' : 'NO CANTINHO'}</p><h2>{selected.name}</h2><strong>{selected.price}</strong><span className="divider" /><div>{selected.detail}</div>{selected.kind === 'festival' && <><section className="festival-includes"><h3>O que está incluso</h3><p><b>Bebidas:</b> {selected.drinks}</p><div className="festival-items">{selected.items.map((item) => <span key={item}>✓ {item}</span>)}</div></section></>} {!selected.kind && <button className="add-button" onClick={() => addToCart(selected)}>Adicionar ao pedido <Icon>+</Icon></button>}</article></div>}
+    {flow === 'cart' && <div className="modal-backdrop"><article className="modal order-modal"><button className="close" onClick={() => setFlow(null)}>×</button><p>SEU PEDIDO</p><h2>Carrinho</h2>{cart.length ? <><div className="cart-list">{cart.map((item) => <div key={`${item.name}-${item.price}`}><span>{item.quantity}x</span><b>{item.name}</b><strong>{item.price}</strong></div>)}</div><div className="order-total"><span>Total</span><strong>R$ {total.toFixed(2).replace('.', ',')}</strong></div><button className="add-button" onClick={() => setFlow('checkout')}>Finalizar pedido <Icon>→</Icon></button></> : <p className="empty">Seu carrinho está esperando uma porção gelada e uma cerveja.</p>}</article></div>}
+    {flow === 'checkout' && <div className="modal-backdrop"><form className="modal order-modal checkout" onSubmit={finalize}><button type="button" className="close" onClick={() => setFlow('cart')}>×</button><p>QUASE LÁ</p><h2>Finalizar pedido</h2><input required name="name" placeholder="Seu nome" /><select name="mode"><option value="Entrega">Entrega</option><option value="Retirada">Retirada no local</option></select><input required name="address" placeholder="Endereço completo" /><select name="payment"><option>Pix na entrega</option><option>Dinheiro</option><option>Cartão na entrega</option></select><small>A taxa de entrega será confirmada pela equipe.</small><button className="add-button" type="submit">Confirmar pedido <Icon>✓</Icon></button></form></div>}
+    {flow === 'success' && <div className="modal-backdrop"><article className="modal order-modal success"><span className="success-icon">✓</span><p>PEDIDO ENVIADO</p><h2>Tá na mão!</h2><strong>Pedido #{order.id}</strong><div>Recebemos seu pedido, {order.name}. A equipe vai confirmar a entrega e a taxa pelo WhatsApp.</div><button className="add-button" onClick={() => setFlow('panel')}>Ver painel da equipe <Icon>→</Icon></button></article></div>}
+    {flow === 'panel' && <div className="modal-backdrop"><article className="modal order-modal panel"><button className="close" onClick={() => setFlow(null)}>×</button><p>DEMONSTRAÇÃO</p><h2>Painel de pedidos</h2><div className="order-card"><span>NOVO PEDIDO #{order.id}</span><h3>{order.name} · {order.mode}</h3><p>{order.address}</p>{order.items.map((item) => <div key={item.name}>{item.quantity}x {item.name} <b>{item.price}</b></div>)}<strong>R$ {order.total.toFixed(2).replace('.', ',')}</strong><button>Aceitar pedido</button></div></article></div>}
   </main>
 }
 
