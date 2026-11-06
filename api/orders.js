@@ -18,6 +18,7 @@ function send(response, status, body) {
 
 export default async function handler(request, response) {
   if (request.method !== 'POST') return send(response, 405, { error: 'Método não permitido.' })
+  try {
 
   const { customerName, fulfillment, address, paymentMethod, items } = request.body || {}
   if (!customerName || !['delivery', 'pickup'].includes(fulfillment) || !Array.isArray(items) || !items.length) {
@@ -52,4 +53,8 @@ export default async function handler(request, response) {
   if (!saved.ok) return send(response, 500, { error: 'Não conseguimos registrar o pedido. Tente novamente.' })
   const [order] = await saved.json()
   return send(response, 201, { id: order.order_number, totalCents: order.total_cents })
+  } catch (error) {
+    console.error('Order creation failed:', error)
+    return send(response, 500, { error: 'O pedido não pôde ser registrado agora. Tente novamente em instantes.' })
+  }
 }

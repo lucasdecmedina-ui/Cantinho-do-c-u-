@@ -113,7 +113,9 @@ function App() {
     setIsSubmitting(true)
     try {
       const response = await fetch('/api/orders', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ customerName: data.get('name'), fulfillment: data.get('mode'), address: data.get('address'), paymentMethod: data.get('payment'), items: cart }) })
-      const result = await response.json()
+      const responseBody = await response.text()
+      let result
+      try { result = JSON.parse(responseBody) } catch { result = {} }
       if (!response.ok) throw new Error(result.error || 'Não foi possível enviar o pedido.')
       setOrder({ id: String(result.id), name: data.get('name'), mode: data.get('mode'), address: data.get('address'), payment: data.get('payment'), items: cart, total: result.totalCents / 100 })
       setCart([])
