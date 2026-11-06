@@ -1,5 +1,7 @@
 import { useMemo, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
+import Checkout from './Checkout'
+import Panel from './Panel'
 import './styles.css'
 
 const contact = {
@@ -93,9 +95,6 @@ function App() {
   const [cart, setCart] = useState([])
   const [flow, setFlow] = useState(null)
   const [order, setOrder] = useState(null)
-  const [checkoutMode, setCheckoutMode] = useState('delivery')
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [orderError, setOrderError] = useState('')
   const chipsRef = useRef(null)
   const items = useMemo(() => menu.filter((item) => item.category === active), [active])
   const category = categories.find((item) => item.id === active)
@@ -103,25 +102,8 @@ function App() {
   const scrollChips = (direction) => chipsRef.current?.scrollBy({ left: direction * 230, behavior: 'smooth' })
   const addToCart = (item) => { setCart((current) => { const found = current.find((entry) => entry.name === item.name && entry.price === item.price); return found ? current.map((entry) => entry === found ? { ...entry, quantity: entry.quantity + 1 } : entry) : [...current, { ...item, quantity: 1 }] }); setSelected(null) }
   const total = cart.reduce((sum, item) => sum + Number(item.price.replace(/[^0-9,]/g, '').replace(',', '.')) * item.quantity, 0)
-  const deliveryFee = checkoutMode === 'delivery' ? 10 : 0
-  const finalTotal = total + deliveryFee
   const money = (value) => `R$ ${value.toFixed(2).replace('.', ',')}`
-  const finalize = async (event) => {
-    event.preventDefault()
-    const data = new FormData(event.currentTarget)
-    setOrderError('')
-    setIsSubmitting(true)
-    try {
-      const response = await fetch('/api/orders', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ customerName: data.get('name'), fulfillment: data.get('mode'), address: data.get('address'), paymentMethod: data.get('payment'), items: cart }) })
-      const responseBody = await response.text()
-      let result
-      try { result = JSON.parse(responseBody) } catch { result = {} }
-      if (!response.ok) throw new Error(result.error || 'Não foi possível enviar o pedido.')
-      setOrder({ id: String(result.id), name: data.get('name'), mode: data.get('mode'), address: data.get('address'), payment: data.get('payment'), items: cart, total: result.totalCents / 100 })
-      setCart([])
-      setFlow('success')
-    } catch (error) { setOrderError(error.message) } finally { setIsSubmitting(false) }
-  }
+  const changeQuantity = (item, delta) => setCart((current) => current.map((entry) => entry.name === item.name && entry.price === item.price ? { ...entry, quantity: entry.quantity + delta } : entry).filter((entry) => entry.quantity > 0))
 
   return <main>
     <header className="topbar">
@@ -180,11 +162,10 @@ function App() {
     </nav>
 
     {selected && <div className="modal-backdrop" role="presentation" onClick={() => setSelected(null)}><article className={`modal ${selected.kind === 'festival' ? 'festival-modal' : ''}`} role="dialog" aria-modal="true" aria-label={selected.name} onClick={(event) => event.stopPropagation()}>{selected.image && <img src={selected.image} alt="" />}<button className="close" onClick={() => setSelected(null)} aria-label="Fechar">×</button><p>{selected.kind === 'festival' ? 'TODA QUINTA' : 'NO CANTINHO'}</p><h2>{selected.name}</h2><strong>{selected.price}</strong><span className="divider" /><div>{selected.detail}</div>{selected.kind === 'festival' && <><section className="festival-includes"><h3>O que está incluso</h3><p><b>Bebidas:</b> {selected.drinks}</p><div className="festival-items">{selected.items.map((item) => <span key={item}>✓ {item}</span>)}</div></section></>} {!selected.kind && <button className="add-button" onClick={() => addToCart(selected)}>Adicionar ao pedido <Icon>+</Icon></button>}</article></div>}
-    {flow === 'cart' && <section className="order-page"><article className="order-screen"><button className="back" onClick={() => setFlow(null)}>← Voltar ao cardápio</button><p>SEU PEDIDO</p><h2>Carrinho</h2>{cart.length ? <><div className="cart-list">{cart.map((item) => <div key={`${item.name}-${item.price}`}><span>{item.quantity}x</span><b>{item.name}</b><strong>{item.price}</strong></div>)}</div><div className="order-total"><span>Total</span><strong>R$ {total.toFixed(2).replace('.', ',')}</strong></div><button className="add-button" onClick={() => setFlow('checkout')}>Finalizar pedido <Icon>→</Icon></button></> : <p className="empty">Seu carrinho está esperando uma porção gelada e uma cerveja.</p>}</article></section>}
-    {flow === 'checkout' && <section className="order-page"><form className="order-screen checkout" onSubmit={finalize}><button type="button" className="back" onClick={() => setFlow('cart')}>← Voltar ao carrinho</button><p>QUASE LÁ</p><h2>Finalizar pedido</h2><input required name="name" placeholder="Seu nome" /><select name="mode" value={checkoutMode} onChange={(event) => setCheckoutMode(event.target.value)}><option value="delivery">Entrega · taxa fixa R$ 10,00</option><option value="pickup">Retirada no local</option></select>{checkoutMode === 'delivery' && <input required name="address" placeholder="Endereço completo" />}{checkoutMode === 'pickup' && <input type="hidden" name="address" value="" />}<select name="payment" value={checkoutMode === 'delivery' ? 'online_pix' : 'pay_at_counter'} readOnly><option value={checkoutMode === 'delivery' ? 'online_pix' : 'pay_at_counter'}>{checkoutMode === 'delivery' ? 'Pix online — em breve' : 'Pagamento no balcão'}</option></select><div className="checkout-total"><span>Itens</span><b>{money(total)}</b>{checkoutMode === 'delivery' && <><span>Entrega</span><b>R$ 10,00</b></>}<strong>Total final</strong><strong>{money(finalTotal)}</strong></div><small>{checkoutMode === 'delivery' ? 'O Pix online será ativado quando a conta de pagamento do bar estiver conectada.' : 'Retire no Cantinho e pague no balcão.'}</small>{orderError && <p className="form-error" role="alert">{orderError}</p>}<button className="add-button" type="submit" disabled={isSubmitting}>{isSubmitting ? 'Enviando pedido...' : 'Confirmar pedido'} <Icon>✓</Icon></button></form></section>}
-    {flow === 'success' && <div className="modal-backdrop"><article className="modal order-modal success"><span className="success-icon">✓</span><p>PEDIDO RECEBIDO</p><h2>Tá na mão!</h2><strong>Pedido #{order.id}</strong><div>Recebemos seu pedido, {order.name}. A equipe já consegue ver os detalhes no painel.</div><button className="add-button" onClick={() => setFlow('panel')}>Ver demonstração do painel <Icon>→</Icon></button></article></div>}
-    {flow === 'panel' && <div className="modal-backdrop"><article className="modal order-modal panel"><button className="close" onClick={() => setFlow(null)}>×</button><p>DEMONSTRAÇÃO</p><h2>Painel de pedidos</h2><div className="order-card"><span>NOVO PEDIDO #{order.id}</span><h3>{order.name} · {order.mode}</h3><p>{order.address}</p>{order.items.map((item) => <div key={item.name}>{item.quantity}x {item.name} <b>{item.price}</b></div>)}<strong>R$ {order.total.toFixed(2).replace('.', ',')}</strong><button>Aceitar pedido</button></div></article></div>}
+    {flow === 'cart' && <section className="order-page"><article className="order-screen"><button className="back" onClick={() => setFlow(null)}>← Voltar ao cardápio</button><p>SEU PEDIDO</p><h2>Carrinho</h2>{cart.length ? <><div className="cart-list cart-edit">{cart.map((item) => <div key={`${item.name}-${item.price}`}><div><b>{item.name}</b><small>{item.price} cada</small></div><div className="quantity-control"><button onClick={() => changeQuantity(item, -1)} aria-label={`Remover uma unidade de ${item.name}`}>−</button><span>{item.quantity}</span><button onClick={() => changeQuantity(item, 1)} disabled={item.quantity >= 20} aria-label={`Adicionar uma unidade de ${item.name}`}>+</button></div><strong>{money(Number(item.price.replace(/[^0-9,]/g, '').replace(',', '.')) * item.quantity)}</strong></div>)}</div><div className="order-total"><span>Subtotal</span><strong>{money(total)}</strong></div><p className="cart-fee-note">A taxa de entrega será mostrada no próximo passo.</p><button className="add-button" onClick={() => setFlow('checkout')}>Continuar <Icon>→</Icon></button></> : <p className="empty">Seu carrinho ainda está vazio. Escolha algo gostoso no cardápio!</p>}</article></section>}
+    {flow === 'checkout' && <Checkout cart={cart} total={total} onBack={() => setFlow('cart')} onSuccess={(result) => { setOrder(result); setCart([]); setFlow('success') }} />}
+    {flow === 'success' && <div className="modal-backdrop"><article className="modal order-modal success"><span className="success-icon">✓</span><p>PEDIDO DE DEMONSTRAÇÃO ENVIADO</p><h2>Tá na mão!</h2><strong>Pedido #{order.id}</strong><div>Seu pedido de teste foi registrado, {order.name}. {order.mode === 'delivery' ? 'Nenhum pagamento Pix foi realizado.' : 'Pagamento no balcão é apenas demonstrativo.'}</div><button className="add-button" onClick={() => setFlow(null)}>Voltar ao cardápio <Icon>→</Icon></button></article></div>}
   </main>
 }
 
-createRoot(document.getElementById('root')).render(<App />)
+createRoot(document.getElementById('root')).render(window.location.pathname.replace(/\/$/, '') === '/painel' ? <Panel /> : <App />)

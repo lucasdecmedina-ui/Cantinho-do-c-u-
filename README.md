@@ -19,3 +19,19 @@ pnpm dev
 ## Links que ainda podem ser atualizados
 
 Os links de WhatsApp, Instagram e Google Maps ficam no começo de `src/main.jsx`.
+
+## Painel da equipe
+
+Acesse `/painel`. O login usa Supabase Auth; nunca coloque senhas no código. Para a primeira conta, crie um usuário em **Authentication > Users > Add user** no projeto Supabase, com e-mail confirmado, e conceda acesso no SQL Editor usando o e-mail escolhido:
+
+```sql
+insert into public.team_members (user_id)
+select id from auth.users where email = 'EMAIL_DA_EQUIPE'
+on conflict (user_id) do nothing;
+```
+
+Troque `EMAIL_DA_EQUIPE` pelo e-mail da conta criada. A senha é definida no Supabase e não deve ser compartilhada em chat ou incluída no repositório. Depois, entre no painel com esse e-mail e senha. A equipe deve ativar o som no próprio painel e manter a aba aberta; ele verifica novos pedidos a cada 10 segundos. O navegador pode suspender a aba em segundo plano, especialmente em celulares.
+
+O checkout envia pedidos reais de demonstração ao banco. O Pix não está integrado e não há confirmação de pagamento. A versão atual não tem as proteções antirrobô e limitação de pedidos planejadas para operação real; use-a apenas para demonstração.
+
+O telefone e as partes do endereço são guardados como JSON no campo `address` da tabela existente, mantendo pedidos anteriores legíveis e evitando alterar o banco já criado. O painel interpreta os dois formatos.

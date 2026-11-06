@@ -20,20 +20,20 @@ export default async function handler(request, response) {
   if (request.method !== 'POST') return send(response, 405, { error: 'Método não permitido.' })
   try {
 
-  const { customerName, fulfillment, address, paymentMethod, items } = request.body || {}
-  if (!customerName || !['delivery', 'pickup'].includes(fulfillment) || !Array.isArray(items) || !items.length) {
+  const { customerName, phone, fulfillment, address, paymentMethod, items } = request.body || {}
+  if (typeof customerName !== 'string' || customerName.trim().length < 2 || customerName.trim().length > 100 || typeof phone !== 'string' || !/^\d{10,11}$/.test(phone.replace(/\D/g, '')) || !['delivery', 'pickup'].includes(fulfillment) || !Array.isArray(items) || !items.length || items.length > 50) {
     return send(response, 400, { error: 'Confira os dados do pedido.' })
   }
-  if (fulfillment === 'delivery' && !address?.trim()) return send(response, 400, { error: 'Informe o endereço de entrega.' })
+  if (fulfillment === 'delivery' && (!address || typeof address !== 'object' || ['cep', 'street', 'number', 'neighborhood', 'city', 'state'].some((field) => typeof address[field] !== 'string' || !address[field].trim()) || !/^\d{8}$/.test(address.cep.replace(/\D/g, '')) || !/^[a-zA-Z]{2}$/.test(address.state.trim()))) return send(response, 400, { error: 'Confira o endereço completo e o CEP.' })
   if (fulfillment === 'delivery' && paymentMethod !== 'online_pix') return send(response, 400, { error: 'Para entrega, o pagamento é Pix online.' })
   if (fulfillment === 'pickup' && paymentMethod !== 'pay_at_counter') return send(response, 400, { error: 'Para retirada, o pagamento é feito no local.' })
 
   const normalizedItems = items.map((item) => ({
     name: String(item.name || '').slice(0, 140),
-    quantity: Math.max(1, Math.min(20, Number(item.quantity) || 1)),
+    quantity: Number(item.quantity),
     unit_price_cents: approvedProducts.get(`${item.name}|${item.price}`) || approvedProducts.get(item.name),
   }))
-  if (normalizedItems.some((item) => !item.name || item.unit_price_cents <= 0)) return send(response, 400, { error: 'Há um item inválido no pedido.' })
+  if (normalizedItems.some((item) => !item.name || !Number.isInteger(item.quantity) || item.quantity < 1 || item.quantity > 20 || !Number.isInteger(item.unit_price_cents) || item.unit_price_cents <= 0)) return send(response, 400, { error: 'Há um item inválido no pedido.' })
 
   const subtotalCents = normalizedItems.reduce((total, item) => total + item.unit_price_cents * item.quantity, 0)
   const deliveryCents = fulfillment === 'delivery' ? DELIVERY_FEE_CENTS : 0
@@ -45,7 +45,9 @@ export default async function handler(request, response) {
     method: 'POST',
     headers: { apikey: secret, Authorization: `Bearer ${secret}`, 'Content-Type': 'application/json', Prefer: 'return=representation' },
     body: JSON.stringify({
-      customer_name: customerName.trim(), fulfillment, address: fulfillment === 'delivery' ? address.trim() : null,
+      customer_name: customerName.trim(), fulfillment,
+      // Preserva compatibilidade com o banco existente, sem migração destrutiva.
+      address: JSON.stringify({ phone: phone.replace(/\D/g, ''), location: fulfillment === 'delivery' ? Object.fromEntries(['cep', 'street', 'number', 'complement', 'neighborhood', 'city', 'state'].map((field) => [field, String(address[field] || '').trim().slice(0, 120)])) : null }),
       payment_method: paymentMethod, items: normalizedItems,
       subtotal_cents: subtotalCents, delivery_cents: deliveryCents, total_cents: subtotalCents + deliveryCents,
     }),

@@ -1,0 +1,49 @@
+const { chromium } = require('playwright')
+
+;(async () => {
+  const browser = await chromium.launch({ headless: true, executablePath: 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe' })
+  try {
+    const page = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true })
+    const errors = []
+    page.on('pageerror', (error) => errors.push(error.message))
+    await page.route('**/ws/11000000/json/', (route) => route.fulfill({ json: { logradouro: 'Rua Teste', bairro: 'Centro', localidade: 'Santos', uf: 'SP' } }))
+    await page.route('**/api/orders', (route) => route.fulfill({ status: 201, json: { id: 23, totalCents: 10500 } }))
+    await page.goto('http://127.0.0.1:5182/', { waitUntil: 'networkidle' })
+    await page.getByRole('button', { name: /Cupim da Ju/ }).click()
+    await page.getByRole('button', { name: /Adicionar ao pedido/ }).click()
+    await page.getByRole('button', { name: 'Ver carrinho' }).click()
+    await page.getByRole('button', { name: 'Continuar' }).click()
+    await page.getByLabel('Seu nome').fill('Pessoa Teste')
+    await page.getByLabel('Celular com DDD').fill('13999999999')
+    await page.getByLabel('CEP').fill('11000000')
+    await page.getByLabel('CEP').blur()
+    await page.getByLabel('Rua ou avenida').waitFor()
+    await page.waitForFunction(() => document.querySelector('input[name=street]').value === 'Rua Teste')
+    await page.getByLabel('Número').fill('10')
+    if (!(await page.getByText('R$ 105,00').count())) throw new Error('Total de entrega incorreto')
+    await page.getByRole('button', { name: 'Enviar pedido de demonstração' }).click()
+    await page.getByText('Pedido #23').waitFor()
+    await page.goto('http://127.0.0.1:5182/painel', { waitUntil: 'networkidle' })
+    await page.getByRole('heading', { name: /Bem-vindo/ }).waitFor()
+    if (!(await page.getByLabel('E-mail').count()) || !(await page.getByLabel('Senha').count())) throw new Error('Login não apareceu')
+    const user = { id: '11111111-1111-4111-8111-111111111111', aud: 'authenticated', role: 'authenticated', email: 'equipe@example.test', app_metadata: {}, user_metadata: {} }
+    const jwtPart = (value) => Buffer.from(JSON.stringify(value)).toString('base64url')
+    const token = `${jwtPart({ alg: 'HS256', typ: 'JWT' })}.${jwtPart({ sub: user.id, role: 'authenticated', exp: Math.floor(Date.now() / 1000) + 3600 })}.signature`
+    let status = 'new'
+    const order = { id: '22222222-2222-4222-8222-222222222222', order_number: 23, customer_name: 'Pessoa Teste', fulfillment: 'pickup', address: JSON.stringify({ phone: '13999999999', location: null }), payment_method: 'pay_at_counter', payment_status: 'pending', order_status: status, subtotal_cents: 9500, delivery_cents: 0, total_cents: 9500, items: [{ name: 'Cupim da Ju', quantity: 1, unit_price_cents: 9500 }], created_at: new Date().toISOString() }
+    await page.route('**/auth/v1/token?grant_type=password', (route) => route.fulfill({ json: { access_token: token, token_type: 'bearer', expires_in: 3600, refresh_token: 'test-refresh', user } }))
+    await page.route('**/rest/v1/team_members*', (route) => route.fulfill({ json: { user_id: user.id } }))
+    await page.route('**/rest/v1/orders*', async (route) => {
+      if (route.request().method() === 'PATCH') { status = route.request().postDataJSON().order_status; await route.fulfill({ json: [{ id: order.id }] }) }
+      else await route.fulfill({ json: [{ ...order, order_status: status }] })
+    })
+    await page.getByLabel('E-mail').fill('equipe@example.test')
+    await page.getByLabel('Senha').fill('senha-de-teste')
+    await page.getByRole('button', { name: /Entrar no painel/ }).click()
+    await page.getByText('Pedido #23').waitFor()
+    await page.getByRole('button', { name: 'Aceitar pedido' }).click()
+    await page.getByRole('button', { name: 'Iniciar preparo' }).waitFor()
+    if (errors.length) throw new Error(errors.join('\n'))
+    console.log('Mobile: cart, checkout, CEP, delivery total, mocked submission, panel login and order status OK')
+  } finally { await browser.close() }
+})().catch((error) => { console.error(error); process.exitCode = 1 })
