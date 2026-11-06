@@ -1,5 +1,14 @@
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap');
 
+.cart-bar-wrap { position:fixed; z-index:9; bottom:76px; left:50%; transform:translateX(-50%); width:min(680px,100%); padding:10px 18px; background:linear-gradient(0deg,rgba(7,20,11,.97),rgba(7,20,11,.86)); }
+.cart-bar { display:flex; align-items:center; gap:12px; width:100%; min-height:56px; padding:9px 14px; border:0; border-radius:13px; background:var(--gold); color:#172011; box-shadow:0 6px 22px #0005; text-align:left; }
+.cart-bar:active { transform:scale(.99); }.cart-bar:focus-visible { outline:3px solid #fff; outline-offset:3px; }
+.cart-bar-count { flex:none; display:grid; place-items:center; min-width:31px; height:31px; padding:0 6px; border-radius:9px; background:#172011; color:var(--gold); font-size:13px; font-weight:800; }
+.cart-bar-label { flex:1; font-size:13px; font-weight:800; }.cart-bar-label span { margin-left:3px; }
+.cart-bar-total { display:grid; justify-items:end; gap:1px; }.cart-bar-total small { font-size:9px; opacity:.75; }.cart-bar-total strong { font:800 20px/1 'Barlow Condensed',sans-serif; white-space:nowrap; }
+.has-cart-bar footer { padding-bottom:190px; }
+@media (prefers-reduced-motion:reduce) { .cart-bar:active { transform:none; } }
+
 :root { --green:#0c2014; --green-2:#152d1c; --gold:#f2b93b; --amber:#ff8b17; --cream:#fff7e8; --muted:#b6c0af; --line:rgba(255,255,255,.12); color:#fff; background:#0b1c12; font-family:'DM Sans',sans-serif; }
 * { box-sizing:border-box; } html { scroll-behavior:smooth; } body { margin:0; background:radial-gradient(circle at 90% 4%,#244c2c 0,transparent 26rem),var(--green); } button,a { -webkit-tap-highlight-color:transparent; } button { font:inherit; color:inherit; cursor:pointer; } main { max-width:680px; min-height:100vh; margin:auto; overflow:hidden; background:linear-gradient(165deg,#102515 0,#0b1a11 55%,#122717); }
 .topbar { height:76px; padding:10px 18px; display:flex; align-items:center; gap:10px; position:sticky; top:0; z-index:10; background:rgba(12,32,20,.88); backdrop-filter:blur(16px); border-bottom:1px solid rgba(255,255,255,.06); }.logo { width:54px; height:54px; border-radius:50%; object-fit:cover; border:1px solid rgba(242,185,59,.5); }.brand { display:grid; gap:1px; flex:1; }.brand strong { font-family:'Barlow Condensed',sans-serif; font-size:21px; line-height:1; text-transform:uppercase; letter-spacing:.03em; }.brand span { font-size:10px; color:var(--gold); letter-spacing:.12em; text-transform:uppercase; }.header-links { display:flex; gap:8px; }.header-links a { width:35px; height:35px; display:grid; place-items:center; background:rgba(255,255,255,.08); border:1px solid var(--line); color:var(--cream); border-radius:50%; text-decoration:none; font-weight:800; }
