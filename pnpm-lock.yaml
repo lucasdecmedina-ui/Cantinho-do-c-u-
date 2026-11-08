@@ -24,11 +24,17 @@ importers:
         specifier: latest
         version: 8.3.6
     devDependencies:
+      '@electric-sql/pglite':
+        specifier: ^0.5.15
+        version: 0.5.15
       qrcode:
         specifier: ^1.5.4
         version: 1.5.4
 
 packages:
+
+  '@electric-sql/pglite@0.5.15':
+    resolution: {integrity: sha512-ERZWgaRTxueGV4cvL1tfpAOzFCWTXoUtbCBqnf2FhHDVs/so9eAKaanvrwWF9Dntx7BYsmFQujVQ0/B4S8Mmiw==}
 
   '@oxc-project/types@0.156.0':
     resolution: {integrity: sha512-1Duyg48TdJNdyhEB8Xn1L36bT9Pv6GUtlKjHxOys8xkaF/rQq3XJE+bAurSK/AgIz5mGFsb77cn9Pb20+WCScw==}
@@ -473,6 +479,8 @@ packages:
     engines: {node: '>=8'}
 
 snapshots:
+
+  '@electric-sql/pglite@0.5.15': {}
 
   '@oxc-project/types@0.156.0': {}
 

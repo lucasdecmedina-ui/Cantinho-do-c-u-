@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "test": "node --test tests/order-retention.test.js tests/orders.test.js",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -16,6 +17,7 @@
     "vite": "latest"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.15",
     "qrcode": "^1.5.4"
   }
 }

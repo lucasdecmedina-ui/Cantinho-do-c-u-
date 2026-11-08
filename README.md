@@ -35,3 +35,9 @@ Troque `EMAIL_DA_EQUIPE` pelo e-mail da conta criada. A senha é definida no Sup
 O checkout envia pedidos reais de demonstração ao banco. O Pix não está integrado e não há confirmação de pagamento. A versão atual não tem as proteções antirrobô e limitação de pedidos planejadas para operação real; use-a apenas para demonstração.
 
 O telefone e as partes do endereço são guardados como JSON no campo `address` da tabela existente, mantendo pedidos anteriores legíveis e evitando alterar o banco já criado. O painel interpreta os dois formatos.
+
+## Retenção de pedidos concluídos
+
+Para ativar no banco existente, execute uma vez no SQL Editor o conteúdo de `supabase/migrations/202611080001_retencao_pedidos.sql`. A migração registra a data de conclusão no banco e agenda uma limpeza por hora com Supabase Cron. Apenas pedidos que permaneçam concluídos por pelo menos 72 horas são apagados; pedidos em andamento ou cancelados não entram na limpeza. Pedidos já concluídos antes da ativação recebem um prazo novo de 72 horas porque sua data original de conclusão não foi registrada. Caso um pedido seja reaberto e concluído novamente, a contagem recomeça na nova conclusão.
+
+A remoção do registro é permanente; cópias de segurança existentes têm retenção própria. A tarefa só funciona enquanto o projeto do Supabase estiver ativo e não será migrada automaticamente ao mudar para outro provedor.

@@ -15,6 +15,7 @@ create table if not exists public.orders (
   total_cents integer not null check (total_cents >= 0),
   items jsonb not null check (jsonb_array_length(items) > 0),
   created_at timestamptz not null default now(),
+  completed_at timestamptz,
   constraint delivery_needs_address check (fulfillment <> 'delivery' or address is not null)
 );
 
