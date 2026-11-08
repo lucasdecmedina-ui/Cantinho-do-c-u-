@@ -78,15 +78,6 @@ const menu = [
   { category: 'sem-alcool', name: 'Suco Verde', price: 'R$ 20,00', detail: '400ml · Couve, limão, hortelã e gengibre.' },
 ]
 
-const festival = {
-  kind: 'festival',
-  name: 'Quinta do Festival',
-  price: 'R$ 69,90 por pessoa',
-  detail: 'Toda quinta, das 18h às 21h.',
-  drinks: 'Chopp ou refrigerante de limão, laranja ou tubaína.',
-  items: ['Batata frita', 'Cebola empanada', 'Polenta frita', 'Coxinha de frango', 'Bolinha de queijo', 'Maravilha', 'Mandioca frita', 'Calabresa acebolada', 'Ovo de codorna', 'Dadinho de batata com queijo', 'Bolinho de aipim com carne seca', 'Tulipinha de frango', 'Mini pão de queijo frito', 'Mini churros'],
-}
-
 function Icon({ children }) { return <span aria-hidden="true">{children}</span> }
 
 function App() {
@@ -109,7 +100,7 @@ function App() {
   return <main className={cartCount && !flow && !selected ? 'has-cart-bar' : undefined}>
     <header className="topbar">
       <img className="logo" src="/images/logo-cantinho.png" alt="Bar Cantinho do Céu" />
-      <div className="brand"><strong>Cantinho do Céu</strong><span>Marapé · Santos</span></div>
+      <div className="brand"><strong>Cantinho do Céu</strong><span>Cardápio delivery</span></div>
       <div className="header-links">
         <button className="cart-button" onClick={() => setFlow('cart')} aria-label="Ver carrinho">🛒<b>{cartCount}</b></button>
         <a href={contact.instagram} target="_blank" rel="noreferrer" aria-label="Instagram"><Icon>◎</Icon></a>
@@ -117,23 +108,8 @@ function App() {
       </div>
     </header>
 
-    <section className="hero">
-      <img src="/images/churrasco-domingo.png" alt="Churrasco, porções e cerveja gelada" />
-      <div className="hero-shadow" />
-      <div className="hero-copy"><p>DOMINGO É AQUI</p><h1>Churrasco, pagode<br />e cerveja gelada.</h1><button onClick={() => go('porcoes')}>Ver cardápio <span>↓</span></button></div>
-    </section>
-
-    <section className="offers" aria-label="Ofertas e eventos">
-      <button className="festival-card" onClick={() => setSelected(festival)}>
-        <span className="eyebrow">TODA QUINTA</span><strong>Quinta do<br />Festival</strong><em>Ver o que inclui <span>→</span></em>
-      </button>
-      <button className="drink-card" onClick={() => go('drinks')}>
-        <img src="/images/drinks-cantinho.png" alt="Drinks do Cantinho" /><span>DRINKS DA CASA</span><strong>Um brinde<br />do seu jeito.</strong>
-      </button>
-    </section>
-
     <section id="menu" className="menu-section">
-      <div className="section-heading"><div><p>CARDÁPIO</p><h2>Qual vai ser?</h2></div><span className="mobile-hint">Arraste <Icon>→</Icon></span></div>
+      <div className="section-heading"><div><p>CARDÁPIO DELIVERY</p><h1>Qual vai ser?</h1></div><span className="mobile-hint">Arraste <Icon>→</Icon></span></div>
       <div className="chips-shell"><button className="chip-arrow previous" onClick={() => scrollChips(-1)} aria-label="Ver categorias anteriores">←</button><nav ref={chipsRef} className="chips" aria-label="Categorias do cardápio">
         {categories.map((item) => <button key={item.id} className={active === item.id ? 'active' : ''} onClick={() => setActive(item.id)}><Icon>{item.icon}</Icon>{item.label}</button>)}
       </nav><button className="chip-arrow next" onClick={() => scrollChips(1)} aria-label="Ver próximas categorias">→</button></div>
@@ -148,23 +124,16 @@ function App() {
       <p className="availability">*Itens sujeitos à disponibilidade. Confirme com a equipe.</p>
     </section>
 
-    <section className="review-section">
-      <span>★ ★ ★ ★ ★</span><h2>Curtiu o Cantinho?</h2><p>Sua avaliação ajuda a nossa roda a crescer.</p>
-      <a href={contact.maps} target="_blank" rel="noreferrer">Avaliar no Google <Icon>↗</Icon></a>
-    </section>
-
     <footer><img src="/images/logo-cantinho.png" alt="" /><p>R. Alfredo Albertini, 99<br />Marapé · Santos/SP</p><a href={contact.whatsapp} target="_blank" rel="noreferrer">Falar no WhatsApp</a></footer>
 
     <nav className="bottom-nav" aria-label="Navegação rápida">
-      <button onClick={() => go('destaques')}><Icon>⌂</Icon><span>Início</span></button>
-      <button onClick={() => go('porcoes')}><Icon>▤</Icon><span>Cardápio</span></button>
-      <button onClick={() => setSelected(festival)}><Icon>✦</Icon><span>Ofertas</span></button>
+      <button onClick={() => go('destaques')}><Icon>▤</Icon><span>Cardápio</span></button>
       <a href={contact.maps} target="_blank" rel="noreferrer"><Icon>★</Icon><span>Avaliar</span></a>
     </nav>
 
     {cartCount > 0 && !flow && !selected && <div className="cart-bar-wrap"><button className="cart-bar" onClick={() => setFlow('cart')} aria-label={`Ver carrinho, ${cartCount} ${cartCount === 1 ? 'item' : 'itens'}, subtotal ${money(total)}`}><span className="cart-bar-count" aria-hidden="true">{cartCount}</span><span className="cart-bar-label">Ver carrinho <span aria-hidden="true">→</span></span><span className="cart-bar-total"><small>Subtotal</small><strong>{money(total)}</strong></span></button></div>}
 
-    {selected && <div className="modal-backdrop" role="presentation" onClick={() => setSelected(null)}><article className={`modal ${selected.kind === 'festival' ? 'festival-modal' : ''}`} role="dialog" aria-modal="true" aria-label={selected.name} onClick={(event) => event.stopPropagation()}>{selected.image && <img src={selected.image} alt="" />}<button className="close" onClick={() => setSelected(null)} aria-label="Fechar">×</button><p>{selected.kind === 'festival' ? 'TODA QUINTA' : 'NO CANTINHO'}</p><h2>{selected.name}</h2><strong>{selected.price}</strong><span className="divider" /><div>{selected.detail}</div>{selected.kind === 'festival' && <><section className="festival-includes"><h3>O que está incluso</h3><p><b>Bebidas:</b> {selected.drinks}</p><div className="festival-items">{selected.items.map((item) => <span key={item}>✓ {item}</span>)}</div></section></>} {!selected.kind && <button className="add-button" onClick={() => addToCart(selected)}>Adicionar ao pedido <Icon>+</Icon></button>}</article></div>}
+    {selected && <div className="modal-backdrop" role="presentation" onClick={() => setSelected(null)}><article className="modal" role="dialog" aria-modal="true" aria-label={selected.name} onClick={(event) => event.stopPropagation()}>{selected.image && <img src={selected.image} alt="" />}<button className="close" onClick={() => setSelected(null)} aria-label="Fechar">×</button><p>NO CANTINHO</p><h2>{selected.name}</h2><strong>{selected.price}</strong><span className="divider" /><div>{selected.detail}</div><button className="add-button" onClick={() => addToCart(selected)}>Adicionar ao pedido <Icon>+</Icon></button></article></div>}
     {flow === 'cart' && <section className="order-page"><article className="order-screen"><button className="back" onClick={() => setFlow(null)}>← Voltar ao cardápio</button><p>SEU PEDIDO</p><h2>Carrinho</h2>{cart.length ? <><div className="cart-list cart-edit">{cart.map((item) => <div key={`${item.name}-${item.price}`}><div><b>{item.name}</b><small>{item.price} cada</small></div><div className="quantity-control"><button onClick={() => changeQuantity(item, -1)} aria-label={`Remover uma unidade de ${item.name}`}>−</button><span>{item.quantity}</span><button onClick={() => changeQuantity(item, 1)} disabled={item.quantity >= 20} aria-label={`Adicionar uma unidade de ${item.name}`}>+</button></div><strong>{money(Number(item.price.replace(/[^0-9,]/g, '').replace(',', '.')) * item.quantity)}</strong></div>)}</div><div className="order-total"><span>Subtotal</span><strong>{money(total)}</strong></div><p className="cart-fee-note">A taxa de entrega será mostrada no próximo passo.</p><button className="add-button" onClick={() => setFlow('checkout')}>Continuar <Icon>→</Icon></button></> : <p className="empty">Seu carrinho ainda está vazio. Escolha algo gostoso no cardápio!</p>}</article></section>}
     {flow === 'checkout' && <Checkout cart={cart} total={total} onBack={() => setFlow('cart')} onSuccess={(result) => { setOrder(result); setCart([]); setFlow('success') }} />}
     {flow === 'success' && <div className="modal-backdrop"><article className="modal order-modal success"><span className="success-icon">✓</span><p>PEDIDO DE DEMONSTRAÇÃO ENVIADO</p><h2>Tá na mão!</h2><strong>Pedido #{order.id}</strong><div>Seu pedido de teste foi registrado, {order.name}. {order.mode === 'delivery' ? 'Nenhum pagamento Pix foi realizado.' : 'Pagamento no balcão é apenas demonstrativo.'}</div><button className="add-button" onClick={() => setFlow(null)}>Voltar ao cardápio <Icon>→</Icon></button></article></div>}

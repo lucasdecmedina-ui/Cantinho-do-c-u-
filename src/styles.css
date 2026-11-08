@@ -8,6 +8,8 @@
 .cart-bar-total { display:grid; justify-items:end; gap:1px; }.cart-bar-total small { font-size:9px; opacity:.75; }.cart-bar-total strong { font:800 20px/1 'Barlow Condensed',sans-serif; white-space:nowrap; }
 .has-cart-bar footer { padding-bottom:190px; }
 @media (prefers-reduced-motion:reduce) { .cart-bar:active { transform:none; } }
+.menu-section#menu { padding-top:30px; scroll-margin-top:76px; }
+.section-heading h1 { margin:0; font-family:'Barlow Condensed',sans-serif; font-size:37px; line-height:.9; text-transform:uppercase; }
 
 :root { --green:#0c2014; --green-2:#152d1c; --gold:#f2b93b; --amber:#ff8b17; --cream:#fff7e8; --muted:#b6c0af; --line:rgba(255,255,255,.12); color:#fff; background:#0b1c12; font-family:'DM Sans',sans-serif; }
 * { box-sizing:border-box; } html { scroll-behavior:smooth; } body { margin:0; background:radial-gradient(circle at 90% 4%,#244c2c 0,transparent 26rem),var(--green); } button,a { -webkit-tap-highlight-color:transparent; } button { font:inherit; color:inherit; cursor:pointer; } main { max-width:680px; min-height:100vh; margin:auto; overflow:hidden; background:linear-gradient(165deg,#102515 0,#0b1a11 55%,#122717); }
@@ -24,13 +26,6 @@ footer { border-top:1px solid var(--line); padding:30px 20px 110px; text-align:c
 .chips-shell { position:relative; margin:0 -18px 30px; }
 .chips-shell .chips { margin:0; }
 .chip-arrow { display:none; }
-.festival-modal { max-height:88vh; overflow-y:auto; background:linear-gradient(155deg,#284323,#142d1a); }
-.festival-includes { margin-top:21px; padding:16px; border-radius:14px; background:rgba(0,0,0,.17); }
-.festival-includes h3 { margin:0 0 8px; color:var(--gold); font-family:'Barlow Condensed',sans-serif; font-size:23px; text-transform:uppercase; }
-.festival-includes p { margin:0 0 14px; color:#e3eadf; font-size:12px; line-height:1.45; }
-.festival-items { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-.festival-items span { color:#d9e4d4; font-size:11px; line-height:1.25; }
-
 @media (min-width:681px) {
   .mobile-hint { display:none; }
   .chips-shell .chips { padding-left:52px; padding-right:52px; }
