@@ -1,3 +1,4 @@
+import { randomBytes, createHash } from 'node:crypto'
 const DELIVERY_FEE_CENTS = 1000
 
 const priceToCents = (value) => Math.round(Number(String(value).replace(/[^0-9,]/g, '').replace(',', '.')) * 100)
@@ -41,11 +42,13 @@ export default async function handler(request, response) {
   const url = process.env.SUPABASE_URL
   if (!secret || !url) return send(response, 503, { error: 'Pedidos ainda não foram ativados.' })
 
+  const trackingToken = randomBytes(32).toString('base64url')
+  const trackingHash = createHash('sha256').update(trackingToken).digest('hex')
   const saved = await fetch(`${url}/rest/v1/orders`, {
     method: 'POST',
     headers: { apikey: secret, Authorization: `Bearer ${secret}`, 'Content-Type': 'application/json', Prefer: 'return=representation' },
     body: JSON.stringify({
-      customer_name: customerName.trim(), fulfillment,
+      customer_name: customerName.trim(), fulfillment, tracking_token_hash: trackingHash,
       // Preserva compatibilidade com o banco existente, sem migração destrutiva.
       address: JSON.stringify({ phone: phone.replace(/\D/g, ''), location: fulfillment === 'delivery' ? Object.fromEntries(['cep', 'street', 'number', 'complement', 'neighborhood', 'city', 'state'].map((field) => [field, String(address[field] || '').trim().slice(0, 120)])) : null }),
       payment_method: paymentMethod, items: normalizedItems,
@@ -54,7 +57,7 @@ export default async function handler(request, response) {
   })
   if (!saved.ok) return send(response, 500, { error: 'Não conseguimos registrar o pedido. Tente novamente.' })
   const [order] = await saved.json()
-  return send(response, 201, { id: order.order_number, totalCents: order.total_cents })
+  return send(response, 201, { id: order.order_number, totalCents: order.total_cents, trackingToken })
   } catch (error) {
     console.error('Order creation failed:', error)
     return send(response, 500, { error: 'O pedido não pôde ser registrado agora. Tente novamente em instantes.' })

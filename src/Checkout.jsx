@@ -36,7 +36,7 @@ export default function Checkout({ cart, total, onBack, onSuccess }) {
       const response = await fetch('/api/orders', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
       const result = await response.json().catch(() => ({}))
       if (!response.ok || !result.id) throw new Error(result.error || 'Não foi possível enviar o pedido. Tente novamente.')
-      onSuccess({ id: result.id, name: fields.name, mode })
+      onSuccess({ id: result.id, name: fields.name, mode, trackingToken: result.trackingToken })
     } catch (err) { setError(err.message || 'Não foi possível enviar o pedido. Tente novamente.') } finally { setBusy(false) }
   }
   const field = (key, label, options = {}) => <label className={options.className || ''}>{label}{options.optional && <small> · opcional</small>}<input name={key} value={fields[key]} onChange={(e) => update(key, options.mask ? options.mask(e.target.value) : e.target.value)} onBlur={options.onBlur} required={!options.optional} autoComplete={options.autoComplete} inputMode={options.inputMode} maxLength={options.maxLength} placeholder={options.placeholder} /></label>

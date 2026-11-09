@@ -2,6 +2,8 @@ import { useMemo, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import Checkout from './Checkout'
 import Panel from './Panel'
+import Tracking from './Tracking'
+import './tracking.css'
 import './styles.css'
 
 const contact = {
@@ -136,8 +138,9 @@ function App() {
     {selected && <div className="modal-backdrop" role="presentation" onClick={() => setSelected(null)}><article className="modal" role="dialog" aria-modal="true" aria-label={selected.name} onClick={(event) => event.stopPropagation()}>{selected.image && <img src={selected.image} alt="" />}<button className="close" onClick={() => setSelected(null)} aria-label="Fechar">×</button><p>NO CANTINHO</p><h2>{selected.name}</h2><strong>{selected.price}</strong><span className="divider" /><div>{selected.detail}</div><button className="add-button" onClick={() => addToCart(selected)}>Adicionar ao pedido <Icon>+</Icon></button></article></div>}
     {flow === 'cart' && <section className="order-page"><article className="order-screen"><button className="back" onClick={() => setFlow(null)}>← Voltar ao cardápio</button><p>SEU PEDIDO</p><h2>Carrinho</h2>{cart.length ? <><div className="cart-list cart-edit">{cart.map((item) => <div key={`${item.name}-${item.price}`}><div><b>{item.name}</b><small>{item.price} cada</small></div><div className="quantity-control"><button onClick={() => changeQuantity(item, -1)} aria-label={`Remover uma unidade de ${item.name}`}>−</button><span>{item.quantity}</span><button onClick={() => changeQuantity(item, 1)} disabled={item.quantity >= 20} aria-label={`Adicionar uma unidade de ${item.name}`}>+</button></div><strong>{money(Number(item.price.replace(/[^0-9,]/g, '').replace(',', '.')) * item.quantity)}</strong></div>)}</div><div className="order-total"><span>Subtotal</span><strong>{money(total)}</strong></div><p className="cart-fee-note">A taxa de entrega será mostrada no próximo passo.</p><button className="add-button" onClick={() => setFlow('checkout')}>Continuar <Icon>→</Icon></button></> : <p className="empty">Seu carrinho ainda está vazio. Escolha algo gostoso no cardápio!</p>}</article></section>}
     {flow === 'checkout' && <Checkout cart={cart} total={total} onBack={() => setFlow('cart')} onSuccess={(result) => { setOrder(result); setCart([]); setFlow('success') }} />}
-    {flow === 'success' && <div className="modal-backdrop"><article className="modal order-modal success"><span className="success-icon">✓</span><p>PEDIDO DE DEMONSTRAÇÃO ENVIADO</p><h2>Tá na mão!</h2><strong>Pedido #{order.id}</strong><div>Seu pedido de teste foi registrado, {order.name}. {order.mode === 'delivery' ? 'Nenhum pagamento Pix foi realizado.' : 'Pagamento no balcão é apenas demonstrativo.'}</div><button className="add-button" onClick={() => setFlow(null)}>Voltar ao cardápio <Icon>→</Icon></button></article></div>}
+    {flow === 'success' && <div className="modal-backdrop"><article className="modal order-modal success"><span className="success-icon">✓</span><p>PEDIDO DE DEMONSTRAÇÃO ENVIADO</p><h2>Tá na mão!</h2><strong>Pedido #{order.id}</strong><div>Seu pedido de teste foi registrado, {order.name}. {order.mode === 'delivery' ? 'Nenhum pagamento Pix foi realizado.' : 'Pagamento no balcão é apenas demonstrativo.'}</div>{order.trackingToken && <><a className="success-link" href={`/pedido#${order.trackingToken}`}>Acompanhar meu pedido →</a><small className="tracking-private">Guarde seu link pessoal para acompanhar depois:</small><input className="tracking-copy" aria-label="Link de acompanhamento" readOnly value={`${window.location.origin}/pedido#${order.trackingToken}`} onFocus={(event) => event.target.select()} /></>}<button className="add-button" onClick={() => setFlow(null)}>Voltar ao cardápio <Icon>→</Icon></button></article></div>}
   </main>
 }
 
-createRoot(document.getElementById('root')).render(window.location.pathname.replace(/\/$/, '') === '/painel' ? <Panel /> : <App />)
+const path = window.location.pathname.replace(/\/$/, '')
+createRoot(document.getElementById('root')).render(path === '/painel' ? <Panel /> : path === '/pedido' ? <Tracking /> : <App />)
